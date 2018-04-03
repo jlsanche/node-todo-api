@@ -9,7 +9,6 @@ var { User } = require("./models/user");
 var app = express();
 var port = process.env.PORT || 4096;
 
-
 app.use(bodyParser.json());
 
 //wipe database
@@ -62,6 +61,27 @@ app.get("/todos/:id", (req, res) => {
     .catch(e => {
       res.status(404).send();
     });
+});
+
+app.delete("/todos/:id", (req, res) => {
+  var id = req.params.id;
+  //validate id
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  //remove todo by id
+  Todo.findByIdAndRemove(id)
+    .then(todo => {
+      if (!todo) {
+        return res.status(404).send();
+      }
+      res.send(200);
+    })
+    .catch(e => {
+      res.status(404).send();
+    });
+
 });
 
 app.listen(port, () => {
