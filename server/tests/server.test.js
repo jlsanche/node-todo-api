@@ -5,9 +5,20 @@ const { ObjectID } = require("mongodb");
 const { app } = require("./../server");
 const { Todo } = require("./../models/todo");
 
-const todos = [{ _id: new ObjectID(), text: "first test todo" }];
+const todos = [
+  {
+    _id: new ObjectID(),
+    text: "first test todo"
+  },
+  {
+    _id: new ObjectID(),
+    text: "second test todo",
+    completed: true,
+    completedAt: 333
+  }
+];
 
-beforeEach(done => { 
+beforeEach(done => {
   Todo.remove({})
     .then(() => {
       return Todo.insertMany(todos);
@@ -103,7 +114,7 @@ describe("GET /todos/:id", () => {
 
 describe("DELETE/todos/:id", () => {
   it("it should remove a todo", done => {
-    var hexId = todos[1]._id.toHexString();
+    var hexId = todos[0]._id.toHexString();
     request(app)
       .delete(`/todos/${hexId}`)
       .expect(200)
@@ -117,7 +128,7 @@ describe("DELETE/todos/:id", () => {
 
         Todo.findById(hexId)
           .then(todo => {
-            expect(todo).toNotExist();
+            expect(todo).toBeFalsy();
           })
           .catch(e => done(e));
       });
@@ -135,6 +146,48 @@ describe("DELETE/todos/:id", () => {
     request(app)
       .delete("/todos/ferfsopafiopref")
       .expect(404)
+      .end(done);
+  });
+});
+
+describe("PATCH /todos/:id", () => {
+  it("should update the todo", done => {
+    //grab  id of first item
+    var hexId = todos[0]._id.toHexString();
+    var text = "frjeflkafklsdkfuck";
+    request(app)
+      .patch(`/todos/${hexId}`)
+      .send({
+        completed: true,
+        text
+      })
+
+      .expect(200)
+      .expect(res => {
+        expect(res.body.todo.text).toBe(text);
+        expect(res.body.todo.completed).toBe(true);
+        expect(typeof res.body.todo.completedAt).toBe("number");
+      })
+      .end(done);
+
+    //update text, set completed = true
+    //200
+    //text is changed, completed = true, completedAt is a number
+  });
+
+  it("should clear completedAt when todo is not completed", done => {
+    var hexId = todos[1]._id.toHexString();
+    var text = "frjeflkafklsdkfuck!!!!!!!!!!";
+    request(app)
+      .patch(`/todos/${hexId}`)
+      .send({ completed: false, text })
+
+      .expect(200)
+      .expect(res => {
+        expect(res.body.todo.text).toBe(text);
+        expect(res.body.todo.completed).toBe(false);
+        expect(res.body.todo.completedAt).toBeFalsy();
+      })
       .end(done);
   });
 });
