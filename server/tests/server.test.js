@@ -7,7 +7,7 @@ const { Todo } = require("./../models/todo");
 
 const todos = [{ _id: new ObjectID(), text: "first test todo" }];
 
-beforeEach(done => {
+beforeEach(done => { 
   Todo.remove({})
     .then(() => {
       return Todo.insertMany(todos);
